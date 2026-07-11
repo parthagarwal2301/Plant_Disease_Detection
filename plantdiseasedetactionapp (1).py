@@ -1,0 +1,130 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "e1323192-c6eb-45f0-96e6-26033748a9fa",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "WARNING:absl:Compiled the loaded model, but the compiled metrics have yet to be built. `model.compile_metrics` will be empty until you train or evaluate the model.\n",
+      "2026-07-11 12:10:49.720 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.\n",
+      "2026-07-11 12:10:49.722 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.\n",
+      "2026-07-11 12:10:49.722 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.\n",
+      "2026-07-11 12:10:49.723 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.\n",
+      "2026-07-11 12:10:49.724 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.\n",
+      "2026-07-11 12:10:49.725 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.\n",
+      "2026-07-11 12:10:49.726 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.\n",
+      "2026-07-11 12:10:49.727 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.\n",
+      "2026-07-11 12:10:49.728 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.\n",
+      "2026-07-11 12:10:49.730 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.\n",
+      "2026-07-11 12:10:49.731 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.\n",
+      "2026-07-11 12:10:49.731 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.\n",
+      "2026-07-11 12:10:49.733 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.\n",
+      "2026-07-11 12:10:49.734 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.\n",
+      "2026-07-11 12:10:49.735 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.\n",
+      "2026-07-11 12:10:49.736 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.\n",
+      "2026-07-11 12:10:49.737 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.\n",
+      "2026-07-11 12:10:49.738 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.\n",
+      "2026-07-11 12:10:49.739 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.\n",
+      "2026-07-11 12:10:49.740 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.\n",
+      "2026-07-11 12:10:49.740 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.\n",
+      "2026-07-11 12:10:49.741 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.\n",
+      "2026-07-11 12:10:49.742 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.\n",
+      "2026-07-11 12:10:49.743 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.\n",
+      "2026-07-11 12:10:49.743 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.\n"
+     ]
+    }
+   ],
+   "source": [
+    "import streamlit as st\n",
+    "import tensorflow as tf\n",
+    "import numpy as np\n",
+    "from PIL import Image\n",
+    "import pickle\n",
+    "\n",
+    "# Load model\n",
+    "model = tf.keras.models.load_model(\"plant_disease_model.h5\")\n",
+    "\n",
+    "# Load class names\n",
+    "with open(\"class_names.pkl\", \"rb\") as f:\n",
+    "    class_names = pickle.load(f)\n",
+    "st.write(type(class_names))\n",
+    "st.write(len(class_names))\n",
+    "st.write(class_names)\n",
+    "\n",
+    "st.set_page_config(page_title=\"Plant Disease Detection\", page_icon=\"🌿\")\n",
+    "\n",
+    "st.title(\"🌿 Plant Disease Detection\")\n",
+    "st.write(\"Upload a plant leaf image to detect its disease.\")\n",
+    "\n",
+    "uploaded_file = st.file_uploader(\n",
+    "    \"Choose a leaf image\",\n",
+    "    type=[\"jpg\", \"jpeg\", \"png\"]\n",
+    ")\n",
+    "if uploaded_file is not None:\n",
+    "\n",
+    "    image = Image.open(uploaded_file).convert(\"RGB\")\n",
+    "\n",
+    "    st.image(image, caption=\"Uploaded Leaf Image\", use_container_width=True)\n",
+    "\n",
+    "    # Preprocess image\n",
+    "    img = image.resize((128, 128))\n",
+    "    img = np.array(img)\n",
+    "    img = img / 255.0\n",
+    "    img = np.expand_dims(img, axis=0)\n",
+    "\n",
+    "    # Prediction\n",
+    "    prediction = model.predict(img)\n",
+    "\n",
+    "    predicted_index = np.argmax(prediction)\n",
+    "\n",
+    "    st.write(\"Prediction Shape:\", prediction.shape)\n",
+    "    st.write(\"Predicted Index:\", predicted_index)\n",
+    "    st.write(\"Total Class Names:\", len(class_names))\n",
+    "\n",
+    "    confidence = np.max(prediction) * 100\n",
+    "\n",
+    "    if predicted_index < len(class_names):\n",
+    "        st.success(f\"Predicted Disease: {class_names[predicted_index]}\")\n",
+    "        st.info(f\"Confidence: {confidence:.2f}%\")\n",
+    "    else:\n",
+    "        st.error(\"Prediction index is out of range.\")\n",
+    "\n",
+    "\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "3412fc4c-d2cb-4fbd-903e-3264feaeec3f",
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3 (ipykernel)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.13.9"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
